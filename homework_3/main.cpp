@@ -168,16 +168,16 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
 
 Eigen::Vector3f phong_fragment_shader(const fragment_shader_payload& payload)
 {
-    Eigen::Vector3f ka = Eigen::Vector3f(0.005, 0.005, 0.005);
-    Eigen::Vector3f kd = payload.color;
-    Eigen::Vector3f ks = Eigen::Vector3f(0.7937, 0.7937, 0.7937);
+    Eigen::Vector3f ka = Eigen::Vector3f(0.005, 0.005, 0.005); // 环境光
+    Eigen::Vector3f kd = payload.color; // 漫反射
+    Eigen::Vector3f ks = Eigen::Vector3f(0.7937, 0.7937, 0.7937); // 镜面反射
 
     auto l1 = light{{20, 20, 20}, {500, 500, 500}};
     auto l2 = light{{-20, 20, 0}, {500, 500, 500}};
 
     std::vector<light> lights = {l1, l2};
     Eigen::Vector3f amb_light_intensity{10, 10, 10};
-    Eigen::Vector3f eye_pos{0, 0, 10};
+    Eigen::Vector3f eye_pos{0, 0, 10}; // 相机点 世界系
 
     float p = 150;
 
@@ -191,12 +191,21 @@ Eigen::Vector3f phong_fragment_shader(const fragment_shader_payload& payload)
         // TODO: For each light source in the code, calculate what the *ambient*, *diffuse*, and *specular* 
         // components are. Then, accumulate that result on the *result_color* object.
         
+        Eigen::Vector3f point2light = light.position - point;
+        Eigen::Vector3f point2view = eye_pos - point;
+        Eigen::Vector3f half_direction = (point2light.normalized() + point2view.normalized()).normalized();
+        float r2 = 1.0 / point2light.squaredNorm();
+        // ambient
+        result_color += ka.cwiseProduct(amb_light_intensity);
+        // diffuse
+        result_color += kd.cwiseProduct(light.intensity * r2) * (std::max(float(0.0), normal.dot(point2light.normalized())));
+        // specular
+        result_color += ks.cwiseProduct(light.intensity * r2) * std::powf(std::max(float(0.0), normal.dot(half_direction)),p);
+
     }
 
     return result_color * 255.f;
 }
-
-
 
 Eigen::Vector3f displacement_fragment_shader(const fragment_shader_payload& payload)
 {
@@ -244,7 +253,6 @@ Eigen::Vector3f displacement_fragment_shader(const fragment_shader_payload& payl
 
     return result_color * 255.f;
 }
-
 
 Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
 {
@@ -319,7 +327,7 @@ int main(int argc, const char** argv)
     auto texture_path = "hmap.jpg";
     r.set_texture(Texture(obj_path + texture_path));
 
-    std::function<Eigen::Vector3f(fragment_shader_payload)> active_shader = normal_fragment_shader; // 多态函数
+    std::function<Eigen::Vector3f(fragment_shader_payload)> active_shader = phong_fragment_shader; // 多态函数
 
     if (argc >= 2)
     {
