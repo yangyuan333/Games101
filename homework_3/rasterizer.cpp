@@ -294,8 +294,11 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eig
                     Eigen::Vector3f normal_pixel = alpha * t.normal[0] + beta * t.normal[1] + gamma * t.normal[2];
                     Eigen::Vector3f view_point = alpha * view_pos[0] + beta * view_pos[1] + gamma * view_pos[2];
                     Eigen::Vector3f color = alpha * t.color[0] + beta * t.color[1] + gamma * t.color[2];
+                    Eigen::Vector2f uvCoord = alpha * t.tex_coords[0] + beta * t.tex_coords[1] + gamma * t.tex_coords[2];
                     fragment_shader_payload fsp;
                     fsp.color = color; fsp.view_pos = view_point; fsp.normal = normal_pixel.normalized();
+                    fsp.tex_coords = uvCoord;
+                    fsp.texture = &(*texture);
                     set_pixel({ i,j }, fragment_shader(fsp));
                 }
             }
