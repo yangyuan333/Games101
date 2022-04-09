@@ -55,8 +55,47 @@ Eigen::Matrix4f get_model_matrix(float angle)
 
 Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float zNear, float zFar)
 {
-    // TODO: Use the same projection matrix from the previous assignments
+    // Students will implement this function
 
+    Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
+
+    // TODO: Implement this function
+    // Create the projection matrix for the given parameters.
+    // Then return it.
+
+    // Note: zNear zFar is positive, not negative z, so need to transl
+    // First, squish the frustum into a cuboid
+    zNear = -zNear;
+    zFar = -zFar;
+    Eigen::Matrix4f squishMatrix;
+    squishMatrix <<
+        zNear, 0, 0, 0,
+        0, zNear, 0, 0,
+        0, 0, zNear + zFar, -zNear * zFar,
+        0, 0, 1, 0;
+    // Then, trans the cuboid into [-1,1]*[-1,1]*[-1,1]
+    // x:[l,r] y:[b,t] z:[f,n]
+    float b = tan(eye_fov / 2 * MY_PI / 180) * zNear;
+    float t = -b;
+    float l = b * aspect_ratio;
+    float r = t * aspect_ratio;
+    float f = zFar;
+    float n = zNear;
+    Eigen::Matrix4f orthoMatrixTrans;
+    orthoMatrixTrans <<
+        1, 0, 0, -(l + r) / 2,
+        0, 1, 0, -(b + t) / 2,
+        0, 0, 1, -(f + n) / 2,
+        0, 0, 0, 1;
+    Eigen::Matrix4f orthoMatrixScale;
+    orthoMatrixScale <<
+        2 / (r - l), 0, 0, 0,
+        0, 2 / (t - b), 0, 0,
+        0, 0, 2 / (n - f), 0,
+        0, 0, 0, 1;
+
+    projection = orthoMatrixScale * orthoMatrixTrans * squishMatrix;
+    return projection;
 }
 
 Eigen::Vector3f vertex_shader(const vertex_shader_payload& payload)
@@ -66,18 +105,21 @@ Eigen::Vector3f vertex_shader(const vertex_shader_payload& payload)
 
 Eigen::Vector3f normal_fragment_shader(const fragment_shader_payload& payload)
 {
+    // 防止normal分量为负时，无法映射到颜色空间
     Eigen::Vector3f return_color = (payload.normal.head<3>().normalized() + Eigen::Vector3f(1.0f, 1.0f, 1.0f)) / 2.f;
     Eigen::Vector3f result;
     result << return_color.x() * 255, return_color.y() * 255, return_color.z() * 255;
     return result;
 }
 
+// 反射方向
 static Eigen::Vector3f reflect(const Eigen::Vector3f& vec, const Eigen::Vector3f& axis)
 {
     auto costheta = vec.dot(axis);
     return (2 * costheta * axis - vec).normalized();
 }
 
+// 光线
 struct light
 {
     Eigen::Vector3f position;
@@ -246,17 +288,17 @@ Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
 
 int main(int argc, const char** argv)
 {
-    std::vector<Triangle*> TriangleList;
+    std::vector<Triangle*> TriangleList; // 模型三角面片
 
     float angle = 140.0;
     bool command_line = false;
 
     std::string filename = "output.png";
     objl::Loader Loader;
-    std::string obj_path = "../models/spot/";
+    std::string obj_path = "homework_3/models/spot/";
 
     // Load .obj File
-    bool loadout = Loader.LoadFile("../models/spot/spot_triangulated_good.obj");
+    bool loadout = Loader.LoadFile("homework_3/models/spot/spot_triangulated_good.obj");
     for(auto mesh:Loader.LoadedMeshes)
     {
         for(int i=0;i<mesh.Vertices.size();i+=3)
@@ -277,7 +319,7 @@ int main(int argc, const char** argv)
     auto texture_path = "hmap.jpg";
     r.set_texture(Texture(obj_path + texture_path));
 
-    std::function<Eigen::Vector3f(fragment_shader_payload)> active_shader = phong_fragment_shader;
+    std::function<Eigen::Vector3f(fragment_shader_payload)> active_shader = normal_fragment_shader; // 多态函数
 
     if (argc >= 2)
     {

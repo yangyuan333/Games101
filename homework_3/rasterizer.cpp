@@ -149,7 +149,7 @@ auto to_vec4(const Eigen::Vector3f& v3, float w = 1.0f)
     return Vector4f(v3.x(), v3.y(), v3.z(), w);
 }
 
-static bool insideTriangle(int x, int y, const Vector4f* _v){
+static bool insideTriangle(float x, float y, const Vector4f* _v){
     Vector3f v[3];
     for(int i=0;i<3;i++)
         v[i] = {_v[i].x(),_v[i].y(), 1.0};
@@ -204,7 +204,7 @@ void rst::rasterizer::draw(std::vector<Triangle *> &TriangleList) {
             vec.z()/=vec.w();
         }
 
-        Eigen::Matrix4f inv_trans = (view * model).inverse().transpose();
+        Eigen::Matrix4f inv_trans = (view * model).inverse().transpose(); // Äæ×ªÖÃ¾ØÕó
         Eigen::Vector4f n[] = {
                 inv_trans * to_vec4(t->normal[0], 0.0f),
                 inv_trans * to_vec4(t->normal[1], 0.0f),
@@ -256,9 +256,70 @@ static Eigen::Vector2f interpolate(float alpha, float beta, float gamma, const E
     return Eigen::Vector2f(u, v);
 }
 
+enum class shader  {
+    Normal,
+    Phong,
+    Texsure,
+    Bump,
+    Displacement
+};
+
 //Screen space rasterization
 void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eigen::Vector3f, 3>& view_pos) 
 {
+    shader mode = shader::Normal;
+
+    // bbox
+    Eigen::Vector2i p_min{ int(std::min(t.a()[0],std::min(t.b()[0],t.c()[0]))),int(std::min(t.a()[1],std::min(t.b()[1],t.c()[1]))) };
+    Eigen::Vector2i p_max{ int(std::max(t.a()[0],std::max(t.b()[0],t.c()[0]))),int(std::max(t.a()[1],std::max(t.b()[1],t.c()[1]))) };
+
+    switch (mode)
+    {
+    case shader::Normal:
+        // loop pixels
+        for (int i = p_min[0]; i <= p_max[0]; i++) {
+            for (int j = p_min[1]; j <= p_max[1]; j++) {
+                // check the pixel is in triangle
+                // !!!!!!
+                // not use MSAA
+                // !!!!!!
+                if (insideTriangle(i + 0.5, j + 0.5, t.v)) {
+                    std::tuple<float, float, float> Barycentric;
+                    float alpha, beta, gamma;
+                    // pixel space interpolation
+                    std::tie(alpha, beta, gamma) = computeBarycentric2D(i + 0.5, j + 0.5, t.v);
+                    // depth interpolation
+                    float w_reciprocal = 1.0 / (alpha / t.v[0].w() + beta / t.v[1].w() + gamma / t.v[2].w());
+                    float z_interpolated = alpha * t.v[0].z() / t.v[0].w() + beta * t.v[1].z() / t.v[1].w() + gamma * t.v[2].z() / t.v[2].w();
+                    z_interpolated *= w_reciprocal;
+                    // normal interpolation
+                    // !!!!!!
+                    //not use view space interpolation
+                    // !!!!!!
+                    Eigen::Vector3f normal_pixel = alpha * t.normal[0] + beta * t.normal[1] + gamma * t.normal[2];
+
+                    if (-z_interpolated < depth_buf[get_index(i, j)]) {
+                        depth_buf[get_index(i, j)] = -z_interpolated;
+                        fragment_shader_payload fsp;
+                        fsp.normal = normal_pixel;
+                        set_pixel({ i,j}, fragment_shader(fsp));
+                    }
+                }
+            }
+        }
+
+        break;
+    case shader::Phong:
+        break;
+    case shader::Texsure:
+        break;
+    case shader::Bump:
+        break;
+    case shader::Displacement:
+        break;
+    default:
+        break;
+    }
     // TODO: From your HW3, get the triangle rasterization code.
     // TODO: Inside your rasterization loop:
     //    * v[i].w() is the vertex view space depth value z.
