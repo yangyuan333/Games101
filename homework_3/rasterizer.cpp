@@ -267,8 +267,6 @@ enum class shader  {
 //Screen space rasterization
 void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eigen::Vector3f, 3>& view_pos) 
 {
-    shader mode = shader::Phong;
-
     // bbox
     Eigen::Vector2i p_min{ int(std::min(t.a()[0],std::min(t.b()[0],t.c()[0]))),int(std::min(t.a()[1],std::min(t.b()[1],t.c()[1]))) };
     Eigen::Vector2i p_max{ int(std::max(t.a()[0],std::max(t.b()[0],t.c()[0]))),int(std::max(t.a()[1],std::max(t.b()[1],t.c()[1]))) };

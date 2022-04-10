@@ -303,14 +303,35 @@ Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
     // Vector b = n cross product t
     // Matrix TBN = [t b n]
     // dU = kh * kn * (h(u+1/w,v)-h(u,v))
-    // dV = kh * kn * (h(u,v+1/h)-h(u,v))
+    // dV = kh * kn * (h(u,v+1/w)-h(u,v))
     // Vector ln = (-dU, -dV, 1)
     // Normal n = normalize(TBN * ln)
 
+    float x = normal[0]; float y = normal[1]; float z = normal[2];
+    Eigen::Vector3f t{ x * y / sqrt(x * x + z * z),sqrt(x * x + z * z),z * y / sqrt(x * x + z * z) };
+    Eigen::Vector3f b = normal.cross(t);
+    Eigen::Matrix3f TBN; TBN.col(0) = t; TBN.col(1) = b; TBN.col(2) = normal;
+    float dU = kh * kn * (
+        payload.texture->getColorBilinear(payload.tex_coords[0] + 1.0 / payload.texture->width, payload.tex_coords[1])[0] -
+        payload.texture->getColorBilinear(payload.tex_coords[0], payload.tex_coords[1])[0]
+        );
+    float dV = kh * kn * (
+        payload.texture->getColorBilinear(payload.tex_coords[0], payload.tex_coords[1] + 1.0 / payload.texture->height)[0] -
+        payload.texture->getColorBilinear(payload.tex_coords[0], payload.tex_coords[1])[0]
+        );
+    Eigen::Vector3f ln{ -dU,-dV,1 };
+    normal = (TBN * ln).normalized();
+    Eigen::Vector3f result_color = (normal.head<3>().normalized() + Eigen::Vector3f(1.0f, 1.0f, 1.0f)) / 2.f;
 
-    Eigen::Vector3f result_color = {0, 0, 0};
-    result_color = normal;
-
+    //Eigen::Vector3f result_color = {0, 0, 0};
+    //result_color = normal;
+    //float rr = result_color(0); float gg = result_color(1); float bb = result_color(2);
+    //if (result_color(0) >= 1) result_color(0) = 0.999;
+    //if (result_color(1) >= 1) result_color(1) = 0.999;
+    //if (result_color(2) >= 1) result_color(2) = 0.999;
+    //if (result_color(0) <= 0) result_color(0) = 0.001;
+    //if (result_color(1) <= 0) result_color(1) = 0.001;
+    //if (result_color(2) <= 0) result_color(2) = 0.001;
     return result_color * 255.f;
 }
 
@@ -344,10 +365,10 @@ int main(int argc, const char** argv)
 
     rst::rasterizer r(700, 700);
 
-    auto texture_path = "spot_texture.jpg";
+    auto texture_path = "hmap.jpg";
     r.set_texture(Texture(obj_path + texture_path));
 
-    std::function<Eigen::Vector3f(fragment_shader_payload)> active_shader = texture_fragment_shader; // 多态函数
+    std::function<Eigen::Vector3f(fragment_shader_payload)> active_shader = bump_fragment_shader; // 多态函数
 
     if (argc >= 2)
     {

@@ -31,6 +31,9 @@ public:
     }
     Eigen::Vector3f getColorBilinear(float u, float v)
     {
+        u = std::max(std::min(u, 1.0f), 0.0f);
+        v = std::max(std::min(v, 1.0f), 0.0f);
+
         auto u_img = u * width;
         auto v_img = (1 - v) * height;
         // u axis interpolation
