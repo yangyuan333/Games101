@@ -134,7 +134,12 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
         // TODO: Get the texture value at the texture coordinates of the current fragment
 
         // neareast interpolation
-        return_color = payload.texture->getColor(
+        //return_color = payload.texture->getColor(
+        //    std::min(std::max(payload.tex_coords[0], 0.0f), 1.0f),
+        //    std::min(std::max(payload.tex_coords[1], 0.0f), 1.0f)
+        //);
+        // bilinear interpolation
+        return_color = payload.texture->getColorBilinear(
             std::min(std::max(payload.tex_coords[0], 0.0f), 1.0f),
             std::min(std::max(payload.tex_coords[1], 0.0f), 1.0f)
         );
