@@ -4,6 +4,12 @@
 #include "Light.hpp"
 #include "Renderer.hpp"
 
+#ifdef _DEBUG
+#pragma comment(lib, "opencv_world451d.lib")
+#else
+#pragma comment(lib, "opencv_world451.lib")
+#endif
+
 // In the main function of the program, we create the scene (create objects and lights)
 // as well as set the options for the render (image width and height, maximum recursion
 // depth, field-of-view, etc.). We then call the render function().

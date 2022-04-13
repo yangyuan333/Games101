@@ -3,6 +3,7 @@
 #include "Renderer.hpp"
 #include "Scene.hpp"
 #include <optional>
+#include <opencv2/opencv.hpp>
 
 inline float deg2rad(const float &deg)
 { return deg * M_PI/180.0; }
@@ -84,14 +85,14 @@ std::optional<hit_payload> trace(
         const Vector3f &orig, const Vector3f &dir,
         const std::vector<std::unique_ptr<Object> > &objects)
 {
-    float tNear = kInfinity;
-    std::optional<hit_payload> payload;
+    float tNear = kInfinity; // the float max
+    std::optional<hit_payload> payload; // like tuple
     for (const auto & object : objects)
     {
         float tNearK = kInfinity;
         uint32_t indexK;
         Vector2f uvK;
-        if (object->intersect(orig, dir, tNearK, indexK, uvK) && tNearK < tNear)
+        if (object->intersect(orig, dir, tNearK, indexK, uvK) && tNearK < tNear) // polymorphic
         {
             payload.emplace();
             payload->hit_obj = object.get();
@@ -127,7 +128,7 @@ Vector3f castRay(
 {
     if (depth > scene.maxDepth) {
         return Vector3f(0.0,0.0,0.0);
-    }
+    } // 递归层数
 
     Vector3f hitColor = scene.backgroundColor;
     if (auto payload = trace(orig, dir, scene.get_objects()); payload)
@@ -187,6 +188,7 @@ Vector3f castRay(
                     auto shadow_res = trace(shadowPointOrig, lightDir, scene.get_objects());
                     bool inShadow = shadow_res && (shadow_res->tNear * shadow_res->tNear < lightDistance2);
 
+                    // 为什么都不考虑光源与着色点的距离影响
                     lightAmt += inShadow ? 0 : light->intensity * LdotN;
                     Vector3f reflectionDirection = reflect(-lightDir, N);
 
@@ -230,13 +232,28 @@ void Renderer::Render(const Scene& scene)
             // Also, don't forget to multiply both of them with the variable *scale*, and
             // x (horizontal) variable with the *imageAspectRatio*            
 
-
+            x = i * 2.0 * scale * imageAspectRatio / scene.width;
+            y = j * 2.0 * scale / scene.height;
+            float dx = 2 * scale * imageAspectRatio / scene.width;
+            float dy = 2 * scale / scene.height;
+            x += (dx / 2);
+            y += (dy / 2);
+            x -= (2.0 * scale * imageAspectRatio / 2);
+            y -= (2.0 * scale / 2);
 
             Vector3f dir = Vector3f(x, y, -1); // Don't forget to normalize this direction!
-            framebuffer[m++] = castRay(eye_pos, dir, scene, 0);
+            dir = normalize(dir);
+            int ind = (scene.height - 1 - j) * scene.width + i;
+            framebuffer[ind] = castRay(eye_pos, dir, scene, 0) * 255.0f;
         }
         UpdateProgress(j / (float)scene.height);
     }
+
+    cv::Mat image(scene.height, scene.width, CV_32FC3, framebuffer.data());
+    image.convertTo(image, CV_8UC3, 1.0f);
+    cv::cvtColor(image, image, cv::COLOR_RGB2BGR);
+
+    cv::imwrite("test.jpg", image);
 
     // save framebuffer to file
     FILE* fp;
