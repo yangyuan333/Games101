@@ -32,9 +32,9 @@ public:
     Bounds3 WorldBound() const;
     ~BVHAccel();
 
-    Intersection Intersect(const Ray &ray) const;
-    Intersection getIntersection(BVHBuildNode* node, const Ray& ray)const;
-    bool IntersectP(const Ray &ray) const;
+    Intersection Intersect(const Ray& ray) const;
+    Intersection getIntersection(BVHBuildNode* node, const Ray& ray, Intersection& inter_last)const;
+    bool IntersectP(const Ray& ray) const;
     BVHBuildNode* root;
 
     // BVHAccel Private Methods

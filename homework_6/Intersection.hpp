@@ -23,7 +23,7 @@ struct Intersection
     Vector3f coords;
     Vector3f normal;
     double distance;
-    Object* obj;
+    Object* obj; // ª˘¿‡ ∏¥”√
     Material* m;
 };
 #endif //RAYTRACING_INTERSECTION_H

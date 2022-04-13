@@ -5,6 +5,12 @@
 #include "global.hpp"
 #include <chrono>
 
+#ifdef _DEBUG
+#pragma comment(lib, "opencv_world451d.lib")
+#else
+#pragma comment(lib, "opencv_world451.lib")
+#endif
+
 // In the main function of the program, we create the scene (create objects and
 // lights) as well as set the options for the render (image width and height,
 // maximum recursion depth, field-of-view, etc.). We then call the render
@@ -13,7 +19,7 @@ int main(int argc, char** argv)
 {
     Scene scene(1280, 960);
 
-    MeshTriangle bunny("../models/bunny/bunny.obj");
+    MeshTriangle bunny("models/bunny/bunny.obj"); // object建立自身的BVH
 
     scene.Add(&bunny);
     scene.Add(std::make_unique<Light>(Vector3f(-20, 70, 20), 1));

@@ -49,11 +49,11 @@ BVHBuildNode* BVHAccel::recursiveBuild(std::vector<Object*> objects)
         return node;
     }
     else {
-        Bounds3 centroidBounds;
+        Bounds3 centroidBounds; // 重心包围盒
         for (int i = 0; i < objects.size(); ++i)
             centroidBounds =
                 Union(centroidBounds, objects[i]->getBounds().Centroid());
-        int dim = centroidBounds.maxExtent();
+        int dim = centroidBounds.maxExtent(); // 最大长度分割
         switch (dim) {
         case 0:
             std::sort(objects.begin(), objects.end(), [](auto f1, auto f2) {
@@ -79,7 +79,7 @@ BVHBuildNode* BVHAccel::recursiveBuild(std::vector<Object*> objects)
         auto middling = objects.begin() + (objects.size() / 2);
         auto ending = objects.end();
 
-        auto leftshapes = std::vector<Object*>(beginning, middling);
+        auto leftshapes = std::vector<Object*>(beginning, middling); // 截取分段
         auto rightshapes = std::vector<Object*>(middling, ending);
 
         assert(objects.size() == (leftshapes.size() + rightshapes.size()));
@@ -95,15 +95,54 @@ BVHBuildNode* BVHAccel::recursiveBuild(std::vector<Object*> objects)
 
 Intersection BVHAccel::Intersect(const Ray& ray) const
 {
+    // 找到 当前最小距离 交点
     Intersection isect;
     if (!root)
         return isect;
-    isect = BVHAccel::getIntersection(root, ray);
+    isect = BVHAccel::getIntersection(root, ray, isect);
     return isect;
 }
 
-Intersection BVHAccel::getIntersection(BVHBuildNode* node, const Ray& ray) const
+bool isLeafNode(BVHBuildNode* node)
+{
+    if ((node->left == nullptr) && (node->right == nullptr)) return true;
+    else return false;
+}
+
+Intersection chooseNear(Intersection itersec1, Intersection itersec2)
+{
+    if (!itersec1.happened) return itersec2;
+    if (!itersec2.happened) return itersec1;
+    return itersec1.distance < itersec2.distance ? itersec1 : itersec2;
+}
+
+Intersection BVHAccel::getIntersection(BVHBuildNode* node, const Ray& ray, Intersection& inter_last) const
 {
     // TODO Traverse the BVH to find intersection
 
+    BVHBuildNode* leftNode = node->left;
+    BVHBuildNode* rightNode = node->right;
+
+    // check the node is leaf?
+    if (leftNode == nullptr && rightNode == nullptr) {
+        Intersection itersec;
+
+        itersec = node->object->getIntersection(ray);
+
+        inter_last = chooseNear(itersec, inter_last);
+
+        return inter_last;
+
+    }
+
+    if (leftNode != nullptr && leftNode->bounds.IntersectRay(ray)) {
+        inter_last = getIntersection(leftNode, ray, inter_last);
+    }
+
+    if (rightNode != nullptr && rightNode->bounds.IntersectRay(ray)) {
+        inter_last = getIntersection(rightNode, ray, inter_last);
+    }
+
+    return inter_last;
+    
 }

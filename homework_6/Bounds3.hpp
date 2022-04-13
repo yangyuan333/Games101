@@ -86,9 +86,41 @@ class Bounds3
 
     inline bool IntersectP(const Ray& ray, const Vector3f& invDir,
                            const std::array<int, 3>& dirisNeg) const;
+
+    inline bool IntersectRay(const Ray& ray) const;
+
 };
 
+inline bool Bounds3::IntersectRay(const Ray& ray) const
+{
+    // 判断光线是否与 AABB 相交
+    // 求解光线与三对平面的相交时间点
+    // 逻辑判断是否相交
 
+    // x-axis
+    float tx1, tx2;
+    tx1 = (pMin.x - ray.origin.x) / ray.direction.x;
+    tx2 = (pMax.x - ray.origin.x) / ray.direction.x;
+    if (tx1 > tx2) std::swap(tx1, tx2);
+
+    // y-axis
+    float ty1, ty2;
+    ty1 = (pMin.y - ray.origin.y) / ray.direction.y;
+    ty2 = (pMax.y - ray.origin.y) / ray.direction.y;
+    if (ty1 > ty2) std::swap(ty1, ty2);
+
+    // z-axis
+    float tz1, tz2;
+    tz1 = (pMin.z - ray.origin.z) / ray.direction.z;
+    tz2 = (pMax.z - ray.origin.z) / ray.direction.z;
+    if (tz1 > tz2) std::swap(tz1, tz2);
+
+    if (std::max(std::max(tx2, ty2), tz2) < 0) return false;
+
+    if (std::max(std::max(tx1, ty1), tz1) > std::min(std::min(tx2, ty2), tz2)) return false;
+
+    return true;
+}
 
 inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
                                 const std::array<int, 3>& dirIsNeg) const

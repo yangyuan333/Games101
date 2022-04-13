@@ -180,7 +180,7 @@ public:
         Intersection intersec;
 
         if (bvh) {
-            intersec = bvh->Intersect(ray);
+            intersec = bvh->Intersect(ray); // 找到 当前object的 最小交点
         }
 
         return intersec;
@@ -212,6 +212,7 @@ inline Intersection Triangle::getIntersection(Ray ray)
 {
     Intersection inter;
 
+    // 表面反向 不认为是相交
     if (dotProduct(ray.direction, normal) > 0)
         return inter;
     double u, v, t_tmp = 0;
@@ -233,10 +234,27 @@ inline Intersection Triangle::getIntersection(Ray ray)
 
     // TODO find ray triangle intersection
 
+    //Vector3f E1 = v1 - v0;
+    //Vector3f E2 = v2 - v0;
+    //Vector3f S = ray.origin - v0;
+    //Vector3f S1 = crossProduct(ray.direction, E2);
+    //Vector3f S2 = crossProduct(S, E1);
+    //float wight = dotProduct(S1, E1);
+    //t_tmp = dotProduct(S2, E2) / wight;
+    //u = dotProduct(S1, S) / wight;
+    //v = dotProduct(S2, ray.direction) / wight;
 
-
+    if (u >= 0 && v >= 0 && (u + v) <= 1 && t_tmp >= 0) {
+        inter.happened = true;
+        inter.obj = this;
+        inter.distance = t_tmp;
+        inter.m = this->m;
+        inter.normal = this->normal;
+        inter.coords = ray.origin + t_tmp * ray.direction;
+    }
 
     return inter;
+
 }
 
 inline Vector3f Triangle::evalDiffuseColor(const Vector2f&) const
