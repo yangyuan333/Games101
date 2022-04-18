@@ -33,7 +33,7 @@ public:
     ~BVHAccel();
 
     Intersection Intersect(const Ray &ray) const;
-    Intersection getIntersection(BVHBuildNode* node, const Ray& ray)const;
+    Intersection getIntersection(BVHBuildNode* node, const Ray& ray, Intersection& intersect)const;
     bool IntersectP(const Ray &ray) const;
     BVHBuildNode* root;
 

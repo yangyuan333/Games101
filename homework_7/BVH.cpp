@@ -101,14 +101,50 @@ Intersection BVHAccel::Intersect(const Ray& ray) const
     Intersection isect;
     if (!root)
         return isect;
-    isect = BVHAccel::getIntersection(root, ray);
+    isect = BVHAccel::getIntersection(root, ray, isect);
     return isect;
 }
 
-Intersection BVHAccel::getIntersection(BVHBuildNode* node, const Ray& ray) const
+bool isLeafNode(BVHBuildNode* node)
+{
+    if ((node->left == nullptr) && (node->right == nullptr)) return true;
+    else return false;
+}
+
+Intersection chooseNear(Intersection itersec1, Intersection itersec2)
+{
+    if (!itersec1.happened) return itersec2;
+    if (!itersec2.happened) return itersec1;
+    return itersec1.distance < itersec2.distance ? itersec1 : itersec2;
+}
+
+Intersection BVHAccel::getIntersection(BVHBuildNode* node, const Ray& ray, Intersection& inter_last) const
 {
     // TODO Traverse the BVH to find intersection
+    BVHBuildNode* leftNode = node->left;
+    BVHBuildNode* rightNode = node->right;
 
+    // check the node is leaf?
+    if (leftNode == nullptr && rightNode == nullptr) {
+        Intersection itersec;
+
+        itersec = node->object->getIntersection(ray);
+
+        inter_last = chooseNear(itersec, inter_last);
+
+        return inter_last;
+
+    }
+
+    if (leftNode != nullptr && leftNode->bounds.IntersectRay(ray)) {
+        inter_last = getIntersection(leftNode, ray, inter_last);
+    }
+
+    if (rightNode != nullptr && rightNode->bounds.IntersectRay(ray)) {
+        inter_last = getIntersection(rightNode, ray, inter_last);
+    }
+
+    return inter_last;
 }
 
 

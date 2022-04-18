@@ -5,7 +5,7 @@
 #include <fstream>
 #include "Scene.hpp"
 #include "Renderer.hpp"
-
+#include <opencv2/opencv.hpp>
 
 inline float deg2rad(const float& deg) { return deg * M_PI / 180.0; }
 
@@ -29,22 +29,39 @@ void Renderer::Render(const Scene& scene)
     for (uint32_t j = 0; j < scene.height; ++j) {
         for (uint32_t i = 0; i < scene.width; ++i) {
             // generate primary ray direction
-            float x = (2 * (i + 0.5) / (float)scene.width - 1) *
-                      imageAspectRatio * scale;
-            float y = (1 - 2 * (j + 0.5) / (float)scene.height) * scale;
+            float x, y;
+            x = i * 2.0 * scale * imageAspectRatio / scene.width;
+            y = j * 2.0 * scale / scene.height;
+            float dx = 2 * scale * imageAspectRatio / scene.width;
+            float dy = 2 * scale / scene.height;
+            x += (dx / 2);
+            y += (dy / 2);
+            x -= (2.0 * scale * imageAspectRatio / 2);
+            y -= (2.0 * scale / 2);
 
-            Vector3f dir = normalize(Vector3f(-x, y, 1));
-            for (int k = 0; k < spp; k++){
-                framebuffer[m] += scene.castRay(Ray(eye_pos, dir), 0) / spp;  
+            Vector3f dir = Vector3f(-x, y, 1); // Don't forget to normalize this direction!
+            dir = normalize(dir);
+            int ind = (scene.height - 1 - j) * scene.width + i;
+
+            Ray ray(eye_pos, dir);
+
+            for (int k = 0; k < spp; k++) {
+                framebuffer[ind] += scene.castRay(ray, 0) * 255.0f / spp;
             }
-            m++;
         }
         UpdateProgress(j / (float)scene.height);
     }
     UpdateProgress(1.f);
 
+    cv::Mat image(scene.height, scene.width, CV_32FC3, framebuffer.data());
+    image.convertTo(image, CV_8UC3, 1.0f);
+    cv::cvtColor(image, image, cv::COLOR_RGB2BGR);
+
+    cv::imwrite("test.jpg", image);
+
     // save framebuffer to file
-    FILE* fp = fopen("binary.ppm", "wb");
+    FILE* fp;
+    fopen_s(&fp, "binary.ppm", "wb");
     (void)fprintf(fp, "P6\n%d %d\n255\n", scene.width, scene.height);
     for (auto i = 0; i < scene.height * scene.width; ++i) {
         static unsigned char color[3];
