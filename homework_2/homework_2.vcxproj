@@ -78,13 +78,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(CUDA_PATH)/include;../../3rdParty/RealSense/include;../../3rdParty/TensorRT/include;../../3rdParty/torch/include;../../3rdParty/Eigen;../../3rdParty/Ceres/include;../../3rdParty/OpenMesh/include;../../3rdParty/OpenCV/include;../../3rdParty/OpenGL/glfw/include;../../3rdParty/OpenGL/glew/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
-    <LibraryPath>$(CUDA_PATH)/lib/x64;../../3rdParty/RealSense/lib/x64;../../3rdParty/TensorRT/lib;../../3rdParty/torch/lib;../../3rdParty/Ceres/lib;../../3rdParty/OpenCV/lib/x64;../../3rdParty/OpenMesh/lib/x64;../../3rdParty/OpenGL/glfw/lib/x64;../../3rdParty/OpenGL/glew/lib/x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(CUDA_PATH)/include;../../../3rdParty/RealSense/include;../../../3rdParty/TensorRT/include;../../../3rdParty/torch/include;../../../3rdParty/Eigen;../../../3rdParty/Ceres/include;../../../3rdParty/OpenMesh/include;../../../3rdParty/OpenCV/include;../../../3rdParty/OpenGL/glfw/include;../../../3rdParty/OpenGL/glew/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
+    <LibraryPath>$(CUDA_PATH)/lib/x64;../../../3rdParty/RealSense/lib/x64;../../../3rdParty/TensorRT/lib;../../../3rdParty/torch/lib;../../../3rdParty/Ceres/lib;../../../3rdParty/OpenCV/lib/x64;../../../3rdParty/OpenMesh/lib/x64;../../../3rdParty/OpenGL/glfw/lib/x64;../../../3rdParty/OpenGL/glew/lib/x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(CUDA_PATH)/include;../../3rdParty/RealSense/include;../../3rdParty/TensorRT/include;../../3rdParty/torch/include;../../3rdParty/Eigen;../../3rdParty/Ceres/include;../../3rdParty/OpenMesh/include;../../3rdParty/OpenCV/include;../../3rdParty/OpenGL/glfw/include;../../3rdParty/OpenGL/glew/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
-    <LibraryPath>$(CUDA_PATH)/lib/x64;../../3rdParty/RealSense/lib/x64;../../3rdParty/TensorRT/lib;../../3rdParty/torch/lib;../../3rdParty/Ceres/lib;../../3rdParty/OpenCV/lib/x64;../../3rdParty/OpenMesh/lib/x64;../../3rdParty/OpenGL/glfw/lib/x64;../../3rdParty/OpenGL/glew/lib/x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(CUDA_PATH)/include;../../../3rdParty/RealSense/include;../../../3rdParty/TensorRT/include;../../../3rdParty/torch/include;../../../3rdParty/Eigen;../../../3rdParty/Ceres/include;../../../3rdParty/OpenMesh/include;../../../3rdParty/OpenCV/include;../../../3rdParty/OpenGL/glfw/include;../../../3rdParty/OpenGL/glew/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
+    <LibraryPath>$(CUDA_PATH)/lib/x64;../../../3rdParty/RealSense/lib/x64;../../../3rdParty/TensorRT/lib;../../../3rdParty/torch/lib;../../../3rdParty/Ceres/lib;../../../3rdParty/OpenCV/lib/x64;../../../3rdParty/OpenMesh/lib/x64;../../../3rdParty/OpenGL/glfw/lib/x64;../../../3rdParty/OpenGL/glew/lib/x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -120,6 +120,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,6 +135,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
